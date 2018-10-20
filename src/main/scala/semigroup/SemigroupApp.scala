@@ -1,30 +1,25 @@
 package semigroup
 
 import cats.instances.all._
-import cats.syntax.semigroup._
 import cats.kernel._
+
 import scala.io.StdIn.readLine
+import data.{Failure, Successful, Validator}
 
 object SemigroupApp extends App {
 
   //Semigroup has the combine method, taking 2 A's and returning an A
-  trait Validate
-
-  case object Succesful extends Validate
-
-  case class Failure(msg: List[String]) extends Validate
-
-  implicit def validateSemigroup: Semigroup[Validate] = (x: Validate, y: Validate) => x match {
-    case Succesful => y
+  implicit def validateSemigroup: Semigroup[Validator] = (x: Validator, y: Validator) => x match {
+    case Successful => y
     case Failure(msg) => y match {
-      case Succesful => x
+      case Successful => x
       case Failure(msg2) => Failure(Semigroup[List[String]].combine(msg, msg2))
     }
   }
 
-  def readFromKeyboard(implicit S: Semigroup[Validate]) = {
+  def readFromKeyboard(implicit S: Semigroup[Validator]) = {
     def categorise(msg: String, fallback: String = "Dambas fuck") =
-      if (msg == "Hi" || msg == "Hello") Succesful
+      if (msg == "Hi" || msg == "Hello") Successful
       else Failure(List(fallback))
 
     val msg = readLine("Write something")
