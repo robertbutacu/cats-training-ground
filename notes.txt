@@ -1,0 +1,11 @@
+1. For functions which might require multiple Options or anything familiar, Applicative's mapN can be used to avoid a for comprehension
+
+Example:
+val username: Option[String] = Some("username")
+val password: Option[String] = Some("password")
+val url: Option[String] = Some("some.login.url.here")
+
+// Stub for demonstration purposes
+def attemptConnect(username: String, password: String, url: String): Option[Connection] = None
+
+Applicative[Option].map3(username, password, url)(attemptConnect)
