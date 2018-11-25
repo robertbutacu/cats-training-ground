@@ -1,8 +1,7 @@
-package io.monad
+package io.monad.scalaz
 
 import scalaz.zio._
 import scalaz.zio.console._
-import java.io.IOException
 
 object IoMonadApp extends App {
   trait MyException extends Exception
