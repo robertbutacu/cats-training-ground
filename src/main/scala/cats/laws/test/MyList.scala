@@ -10,7 +10,7 @@ object MyList {
     override def combine(x: MyList[A], y: MyList[A]): MyList[A] = {
       x match {
         case _: Empty.type => y
-        case h: Head[A]  => Head(h.head, combine(h.tail, y))
+        case h: Head[A]  => y
       }
     }
   }
