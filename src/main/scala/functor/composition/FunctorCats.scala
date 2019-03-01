@@ -52,10 +52,4 @@ object FunctorCats extends App {
     if(b == 0) Left(new IllegalArgumentException("Division by zero"))
     else Right(a / b)
   }
-
-
-  def bla(): Future[Int] = Future {
-    scala.util.Random.nextInt()
-  }
-
 }
