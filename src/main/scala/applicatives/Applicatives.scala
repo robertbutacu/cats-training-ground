@@ -44,5 +44,7 @@ object Applicatives extends App {
   def traverse[A, B](list: List[A])(f: A => Option[B]): Option[List[B]] = {
     ???
   }
+
+  println(traverseOption(List.empty[Int]){i: Int => Some(i)})
 }
 
