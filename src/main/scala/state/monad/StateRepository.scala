@@ -3,8 +3,9 @@ package state.monad
 import java.util.UUID
 
 import cats.data.{IndexedStateT, State}
-import State._
+import State.{get, _}
 import cats.Eval
+import cats.instances.list.catsKernelStdMonoidForList
 
 import scala.util.Random
 
@@ -25,5 +26,49 @@ object StateRepository  extends App {
 
   val result: Eval[(List[Record], (List[Record], List[Record], Option[Record], List[Record]))] = program().run(recordsGenerated)
 
+/*
   println(result.value._2)
+*/
+
+  RepositoryExample.program.map(p => p.runEmpty.value).foreach(println)
+
+  object RepositoryExample {
+    def insert(record: Record): State[List[Record], Unit] = for {
+      _          <- modify[List[Record]](records => records :+ record)
+    } yield ()
+
+
+    def remove[A](record: Record): State[List[Record], Unit] = {
+      for {
+        _          <- modify[List[Record]](records => records.filter(_ == record))
+      } yield ()
+
+    }
+
+    def update(old: Record, updated: Record): State[List[Record], Unit] = {
+      for {
+        _ <- get[List[Record]]
+        _ <- modify[List[Record]](records => records.filter(_ == old) :+ updated)
+      } yield ()
+    }
+
+    def programExample(records: List[Record], toDelete: Record, toUpdate: (Record, Record)): State[List[Record], List[Record]] = for {
+      _               <- set(records)
+      repository      <- get[List[Record]]
+      _               <- remove(toDelete)
+      _               <- update(toUpdate._1, toUpdate._2)
+      _               <- remove(toDelete)
+      finalRepository <- get[List[Record]]
+    } yield finalRepository
+
+    val recordsGenerated: List[Record] = (0 to 5).map(_ => Record(name = Random.nextString(5))).toList :+ Record(name = "TEST") :+ Record(name = "other")
+    val toDelete: Option[Record] = recordsGenerated.find(_.name == "TEST")
+    val toUpdate: Option[Record] = recordsGenerated.find(_.name == "other")
+    val updated = Record(name = "UPDATED")
+
+    val program: Option[State[List[Record], List[Record]]] = for {
+      d <- toDelete
+      u <- toUpdate
+    } yield programExample(recordsGenerated, d, (u, updated))
+  }
 }
