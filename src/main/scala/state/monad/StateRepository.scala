@@ -29,14 +29,12 @@ object StateRepository  extends App {
 /*
   println(result.value._2)
 */
-
-  RepositoryExample.program.map(p => p.runEmpty.value).foreach(r => println(r._1))
+  RepositoryExample.runProgram()
 
   object RepositoryExample {
     def insert(record: Record): State[List[Record], Unit] = for {
       _          <- modify[List[Record]](records => records :+ record)
     } yield ()
-
 
     def remove[A](record: Record): State[List[Record], Unit] = {
       for {
@@ -52,13 +50,15 @@ object StateRepository  extends App {
 
     def programExample(records: List[Record], toDelete: Record, toUpdate: (Record, Record)): State[List[Record], List[Record]] = for {
       _               <- set(records)
+      records         <- get[List[Record]]
+      _               =  println(records)
       _               <- remove(toDelete)
       _               <- update(toUpdate._1, toUpdate._2)
       _               <- remove(toDelete)
       finalRepository <- get[List[Record]]
     } yield finalRepository
 
-    val recordsGenerated: List[Record] = (0 to 1).map(_ => Record(name = Random.nextString(5))).toList :+ Record(name = "TEST") :+ Record(name = "other")
+    val recordsGenerated: List[Record] = (0 to 0).map(_ => Record(name = Random.nextString(5))).toList :+ Record(name = "TEST") :+ Record(name = "other")
     val toDelete: Option[Record] = recordsGenerated.find(_.name == "TEST")
     val toUpdate: Option[Record] = recordsGenerated.find(_.name == "other")
     val updated = Record(name = "UPDATED")
@@ -67,5 +67,7 @@ object StateRepository  extends App {
       d <- toDelete
       u <- toUpdate
     } yield programExample(recordsGenerated, d, (u, updated))
+
+    def runProgram(): Unit = RepositoryExample.program.map(p => p.runEmpty.value).foreach(r => println(r._1))
   }
 }
