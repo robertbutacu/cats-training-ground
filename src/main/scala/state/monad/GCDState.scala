@@ -1,8 +1,8 @@
 package state.monad
 
 import cats.data.StateT
-import StateT._
-import cats.{Id, Monad}
+import cats.data.StateT._
+import cats.{Eval, Monad}
 
 import scala.language.higherKinds
 
@@ -17,8 +17,6 @@ object GCDState extends App {
         }
         else {
           for {
-            state   <- get[F, GCDState]
-            _        = println("Current state is: " + state)
             _       <- modify[F, GCDState](gcd => if(gcd.x > gcd.y) GCDState(gcd.x - gcd.y, gcd.y) else GCDState(gcd.x, gcd.y - gcd.x))
             result  <- gcdProgram
           } yield result
@@ -33,5 +31,5 @@ object GCDState extends App {
     } yield result
   }
 
-  println(gcdProgram[Id].runS(GCDState(50, 62)))
+  println(gcdProgram[Eval].run(GCDState(50, 62)).value)
 }
