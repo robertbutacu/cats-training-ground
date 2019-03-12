@@ -2,12 +2,13 @@ package state.monad
 
 import java.util.UUID
 
-import cats.data.{IndexedStateT, State}
+import cats.data.{IndexedStateT, State, StateT}
 import State.{get, _}
-import cats.Eval
+import cats.effect.IO
+import cats.{Eval, Id, Monad}
 import cats.instances.list.catsKernelStdMonoidForList
-
-import scala.util.Random
+import scala.language.higherKinds
+import scala.util.{Random, Try}
 
 object StateRepository  extends App {
   case class Record(id: String = UUID.randomUUID().toString, name: String)
@@ -29,33 +30,35 @@ object StateRepository  extends App {
 /*
   println(result.value._2)
 */
-  RepositoryExample.runProgram()
+  ProgramRun.runProgramInTry()
+  ProgramRun.runProgramInId()
+  ProgramRun.runProgramInFuture()
 
   object RepositoryExample {
-    def insert(record: Record): State[List[Record], Unit] = for {
-      _          <- modify[List[Record]](records => records :+ record)
-    } yield ()
-
-    def remove[A](record: Record): State[List[Record], Unit] = {
-      for {
-        _          <- modify[List[Record]](records => records.filterNot(_ == record))
-      } yield ()
+    def insert[F[_]](record: Record)(implicit M: Monad[F]): StateT[F, List[Record], Unit] = StateT[F, List[Record], Unit] {
+      records => M.pure(records :+ record, ())
     }
 
-    def update(old: Record, updated: Record): State[List[Record], Unit] = {
-      for {
-        _ <- modify[List[Record]](records => records.filterNot(_ == old) :+ updated)
-      } yield ()
+    def remove[F[_]](record: Record)(implicit M: Monad[F]): StateT[F, List[Record], Unit] = StateT[F, List[Record], Unit] {
+      records => M.pure(records.filterNot(_ == record), Unit)
     }
 
-    def programExample(records: List[Record], toDelete: Record, toUpdate: (Record, Record)): State[List[Record], List[Record]] = for {
-      _               <- set(records)
-      records         <- get[List[Record]]
-      _               =  println(records)
+    def update[F[_]](old: Record, updated: Record)(implicit M: Monad[F]): StateT[F, List[Record], Unit] = StateT[F, List[Record], Unit] {
+      records => M.pure((records.filterNot(_ == old) :+ updated, Unit))
+    }
+
+    def find[F[_]](record: Record)(implicit M: Monad[F]): StateT[F, List[Record], Option[Record]] = StateT[F, List[Record], Option[Record]] {
+      records => M.pure((records, records.find(_ == record)))
+    }
+
+    def programExample[F[_]](records: List[Record], toDelete: Record, toUpdate: (Record, Record))(implicit M: Monad[F]): StateT[F, List[Record], List[Record]] = for {
+      _               <- StateT[F, List[Record], Unit]{ _ => M.pure(records, ()) }
+      _               <- StateT[F, List[Record], List[Record]]{records => M.pure(records, records)}
+      //_               =  println(records)
       _               <- remove(toDelete)
       _               <- update(toUpdate._1, toUpdate._2)
       _               <- remove(toDelete)
-      finalRepository <- get[List[Record]]
+      finalRepository <- StateT[F, List[Record], List[Record]]{records => M.pure(records, records)}
     } yield finalRepository
 
     val recordsGenerated: List[Record] = (0 to 0).map(_ => Record(name = Random.nextString(5))).toList :+ Record(name = "TEST") :+ Record(name = "other")
@@ -63,11 +66,17 @@ object StateRepository  extends App {
     val toUpdate: Option[Record] = recordsGenerated.find(_.name == "other")
     val updated = Record(name = "UPDATED")
 
-    val program: Option[State[List[Record], List[Record]]] = for {
+    def program[F[_]](implicit M: Monad[F]): Option[StateT[F, List[Record], List[Record]]] = for {
       d <- toDelete
       u <- toUpdate
-    } yield programExample(recordsGenerated, d, (u, updated))
+    } yield programExample[F](recordsGenerated, d, (u, updated))
+  }
 
-    def runProgram(): Unit = RepositoryExample.program.map(p => p.runEmpty.value).foreach(r => println(r._1))
+  object ProgramRun {
+    import cats.instances.try_._
+
+    def runProgramInTry(): Unit = RepositoryExample.program[Try](implicitly[Monad[Try]]).map(p => p.runEmpty).foreach(r => println(r))
+    def runProgramInId(): Unit = RepositoryExample.program[Id](implicitly[Monad[Id]]).map(p => p.runEmpty).foreach(r => println(r))
+    def runProgramInFuture(): Unit = RepositoryExample.program[IO](implicitly[Monad[IO]]).map(p => p.runEmpty.unsafeRunSync()).foreach(r => println(r))
   }
 }
