@@ -1,46 +1,37 @@
 package state.monad
 
-import cats.data.State
+import cats.data.StateT
+import StateT._
+import cats.{Id, Monad}
+
+import scala.language.higherKinds
 
 object GCDState extends App {
   case class GCDState(x: Int, y: Int)
 
-  trait CurrentState {
-    def currentStep: Int
-
-    def increment(curr: CurrentState): CurrentState = {
-      curr match {
-        case Continue(x) => Continue(x + 1)
-        case Stop(x)     => Stop(x + 1)
-      }
+  def gcdProgram[F[_]](implicit M: Monad[F]): StateT[F, GCDState, Int] = {
+    def recursiveMaybe(shouldStop: Boolean): StateT[F, GCDState, Int] = {
+        if(shouldStop) {
+          println("Reached end")
+          StateT[F, GCDState, Int](gcd => M.pure(gcd, gcd.x))
+        }
+        else {
+          for {
+            state   <- get[F, GCDState]
+            _        = println("Current state is: " + state)
+            _       <- modify[F, GCDState](gcd => if(gcd.x > gcd.y) GCDState(gcd.x - gcd.y, gcd.y) else GCDState(gcd.x, gcd.y - gcd.x))
+            result  <- gcdProgram
+          } yield result
+        }
     }
-  }
-
-  case class Continue(currentStep: Int) extends CurrentState
-  case class Stop(currentStep: Int)     extends CurrentState
-
-  def analizeState(x: Int, y: Int): State[GCDState, CurrentState] = State { state =>
-    val diff = x - y
-    diff match {
-      case below if diff < 0  => (GCDState(x, diff), Stop(0))
-      case zero  if diff == 0 => (GCDState(x, y), Stop(0))
-      case above if diff > 0  => (GCDState(diff, y), Stop(0))
-    }
-  }
-
-/*
-    def gcd(): State[GCDState, CurrentState] = {
-/*    def status(currentState: CurrentState): State[GCDState, CurrentState] = currentState match {
-      case Continue(_) => gcd()
-      case Stop(_) => State.get
-    }*/
 
     for {
-      curr     <- State.get
-      _        <- analizeState(curr.x, curr.y)
-    } yield State.get
+      curr           <- get[F, GCDState]
+      _              =  println("Current state is: " + curr)
+      shouldStop     <- inspect[F, GCDState, Boolean](gcd => if(Math.abs(gcd.x - gcd.y) == 0) true else false)
+      result         <- recursiveMaybe(shouldStop)
+    } yield result
   }
-*/
 
-  //println(State.apply[GCDState, CurrentState](state => analizeState(state.x, state.y)).run(GCDState(675, 123)).value)
+  println(gcdProgram[Id].runS(GCDState(50, 62)))
 }
