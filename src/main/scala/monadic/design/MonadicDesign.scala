@@ -83,6 +83,12 @@ object MonadicDesign extends App {
         username    <- lift(recoverUsername(Random.nextInt()), Vector("Recovering username"))
         userDetails <- lift(getUserDetails(username), Vector("Recovering user details"))
         _           <- lift(validatePassword(userDetails.password), Vector("Validating password"))
+        username    <- lift(recoverUsername(Random.nextInt()), Vector("Recovering username"))
+        userDetails <- lift(getUserDetails(username), Vector("Recovering user details"))
+        _           <- lift(validatePassword(userDetails.password), Vector("Validating password"))
+        username    <- lift(recoverUsername(Random.nextInt()), Vector("Recovering username"))
+        userDetails <- lift(getUserDetails(username), Vector("Recovering user details"))
+        _           <- lift(validatePassword(userDetails.password), Vector("Validating password"))
       } yield index
     }.foreach {
       value: WriterT[FutureEitherT, Vector[String], Int] =>

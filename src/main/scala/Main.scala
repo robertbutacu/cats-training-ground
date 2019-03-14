@@ -1,8 +1,8 @@
 
 import cats.Semigroup
-import cats.laws.test.{Empty, Head, MyList}
 import cats.syntax.semigroup._
 import cats.syntax.functor._
+import cats_.laws.test.{Empty, Head, MyList}
 
 object Main extends App {
   val myList: MyList[Int] = Head(2, Head(3, Empty))

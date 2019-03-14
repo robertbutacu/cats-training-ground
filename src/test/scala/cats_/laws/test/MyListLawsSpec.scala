@@ -1,5 +1,4 @@
-package cats.laws.test
-
+package cats_.laws.test
 
 import cats.kernel.laws.discipline.SemigroupTests
 import cats.laws.discipline.FunctorTests

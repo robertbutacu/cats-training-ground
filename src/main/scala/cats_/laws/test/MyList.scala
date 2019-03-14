@@ -1,4 +1,4 @@
-package cats.laws.test
+package cats_.laws.test
 
 import cats.{Eq, Functor}
 import cats.kernel.Semigroup

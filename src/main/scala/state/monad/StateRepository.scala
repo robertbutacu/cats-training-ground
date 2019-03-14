@@ -6,7 +6,6 @@ import cats.data.{IndexedStateT, State, StateT}
 import State._
 import cats.effect.IO
 import cats.{Applicative, Eval, Id, Monad}
-import cats.instances.list.catsKernelStdMonoidForList
 
 import scala.language.higherKinds
 import scala.util.{Random, Try}
@@ -77,9 +76,8 @@ object StateRepository  extends App {
   object ProgramRun {
     import cats.instances.try_._
 
-    IndexedStateT
-    def runProgramInTry(): Unit = RepositoryExample.program[Try](implicitly[Monad[Try]]).map(p => p.runS(RepositoryExample.records)).foreach(r => println(r + "\n\n"))
-    def runProgramInId(): Unit = RepositoryExample.program[Id](implicitly[Monad[Id]]).map(p => p.runS(RepositoryExample.records)).foreach(r => println(r + "\n\n"))
-    def runProgramInFuture(): Unit = RepositoryExample.program[IO](implicitly[Monad[IO]]).map(p => p.runS(RepositoryExample.records).unsafeRunSync()).foreach(r => println(r + "\n\n"))
+    def runProgramInTry(): Unit = RepositoryExample.program[Try].map(p => p.runS(RepositoryExample.records)).foreach(r => println(r + "\n\n"))
+    def runProgramInId(): Unit = RepositoryExample.program[Id].map(p => p.runS(RepositoryExample.records)).foreach(r => println(r + "\n\n"))
+    def runProgramInFuture(): Unit = RepositoryExample.program[IO].map(p => p.runS(RepositoryExample.records).unsafeRunSync()).foreach(r => println(r + "\n\n"))
   }
 }

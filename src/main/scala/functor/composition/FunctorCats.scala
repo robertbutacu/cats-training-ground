@@ -6,11 +6,11 @@ import scala.language.higherKinds
 
 
 object FunctorCats extends App {
-  trait Functor[F[_]] {
+  trait MyFunctor[F[_]] {
     def map[A, B](fa: F[A])(f: A => B): F[B]
   }
 
-  object Functor {
+  object MyFunctor {
 
     object ops {
 
@@ -19,13 +19,13 @@ object FunctorCats extends App {
       }
 
       implicit class EffectOps[F[_], A](value: F[A]) {
-        def map[B](f: A => B)(implicit F: Functor[F]): F[B] =
+        def map[B](f: A => B)(implicit F: MyFunctor[F]): F[B] =
           F.map(value)(f)
       }
     }
 
 
-    implicit val optionFunctor: Functor[Option] = new Functor[Option] {
+    implicit val optionFunctor: MyFunctor[Option] = new MyFunctor[Option] {
       override def map[A, B](fa: Option[A])(f: A => B): Option[B] = fa.map(f)
     }
   }
@@ -34,7 +34,7 @@ object FunctorCats extends App {
   case class Empty[A]() extends MyList[A]
   case class Head[A](elem: A, tail: MyList[A]) extends MyList[A]
 
-  implicit val myListFunctor: Functor[MyList] = new Functor[MyList] {
+  implicit val myListFunctor: MyFunctor[MyList] = new MyFunctor[MyList] {
     override def map[A, B](fa: MyList[A])(f: A => B): MyList[B] = {
       fa match {
         case e: Empty[A] => Empty[B]

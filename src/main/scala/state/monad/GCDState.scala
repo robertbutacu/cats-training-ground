@@ -31,5 +31,5 @@ object GCDState extends App {
     } yield result
   }
 
-  println(gcdProgram[Eval].run(GCDState(50, 62)).value)
+  println(gcdProgram[Eval].run(GCDState(50, 75)).value)
 }
