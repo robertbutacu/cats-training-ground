@@ -40,7 +40,12 @@ object AsynchronousExample extends App {
     } yield ()).unsafeRunSync()
   }
 
+  println("Before entering Future: " + Instant.now)
+  Thread.sleep(2000)
   runFutures()
+
+  println("\n\n\n")
+  println("Before entering IO: " + Instant.now)
   Thread.sleep(3000)
   runIOs()
 }
