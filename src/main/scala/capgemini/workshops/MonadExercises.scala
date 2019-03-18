@@ -1,6 +1,7 @@
 package capgemini.workshops
 
-import cats.Monad
+import cats.{Monad, MonadError}
+
 import scala.language.higherKinds
 import cats.syntax.all._
 
@@ -25,28 +26,31 @@ object MonadExercises extends App {
     Some(value) => Some(List(1,2,3)      => ???
     */
 
-  trait Error
-  case class IdNotFound()       extends Error
-  case class UsernameNotFound() extends Error
-  case class InvalidPassword()  extends Error
+  trait MyError extends Throwable
+  case class IdNotFound()       extends MyError
+  case class UsernameNotFound() extends MyError
+  case class InvalidPassword()  extends MyError
 
   case class UserDetails(username: String, password: String)
 
-  type ProgramResponse[A] = Either[Error, A] // F[A]
+  type ProgramMonadError[F[_]] = MonadError[F, Throwable] // F[A]
 
-  def recoverUsername[G[_]](id: Int)(implicit M: Monad[G]): G[String] = {
-    M.pure("some-username")
+  def recoverUsername[G[_]](id: Int)(implicit M: ProgramMonadError[G]): G[String] = {
+    if(id % 2 == 0) M.pure("some-username")
+    else            M.raiseError(IdNotFound())
   }
 
-  def getUserDetails[G[_]](username: String)(implicit M: Monad[G]): G[UserDetails] = {
-   M.pure(UserDetails("some-username", "some-password"))
+  def getUserDetails[G[_]](username: String)(implicit M: ProgramMonadError[G]): G[UserDetails] = {
+   if(username == "some-username") M.pure(UserDetails("some-username", "some-password"))
+   else                            M.raiseError(UsernameNotFound())
   }
 
-  def validatePassword[G[_]](password: String)(implicit M: Monad[G]): G[Unit] = {
-    M.pure(())
+  def validatePassword[G[_]](password: String)(implicit M: ProgramMonadError[G]): G[Unit] = {
+    if(password == "some-password") M.pure(())
+    else                            M.raiseError(InvalidPassword())
   }
 
-  def program[G[_]]()(implicit M: Monad[G]): G[UserDetails] = {
+  def program[G[_]]()(implicit M: ProgramMonadError[G]): G[UserDetails] = {
     for {
       username    <- recoverUsername(id = 12)
       userDetails <- getUserDetails(username)
