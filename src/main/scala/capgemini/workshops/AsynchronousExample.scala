@@ -21,6 +21,7 @@ object AsynchronousExample extends App {
 
     for {
       _ <- print1
+      _ = println("Composing Futures")
       _ <- print2
     } yield ()
   }
@@ -36,6 +37,7 @@ object AsynchronousExample extends App {
 
     (for {
       _ <- io1
+      _ = println("Composing IOs")
       _ <- io2
     } yield ()).unsafeRunSync()
   }
