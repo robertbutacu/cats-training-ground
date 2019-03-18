@@ -50,9 +50,9 @@ object MonadExercises extends App {
     else                            M.raiseError(InvalidPassword())
   }
 
-  def program[G[_]]()(implicit M: ProgramMonadError[G]): G[UserDetails] = {
+  def program[G[_]](id: Int)(implicit M: ProgramMonadError[G]): G[UserDetails] = {
     for {
-      username    <- recoverUsername(id = 12)
+      username    <- recoverUsername(id)
       userDetails <- getUserDetails(username)
       _           <- validatePassword(userDetails.password)
     } yield userDetails
