@@ -50,4 +50,6 @@ object AsynchronousExample extends App {
   println("Before entering IO: " + Instant.now)
   Thread.sleep(3000)
   runIOs()
+
+  //Printer.run[IO]("IO").unsafeRunSync()
 }
