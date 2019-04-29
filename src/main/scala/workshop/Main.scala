@@ -15,7 +15,7 @@ object Main extends App {
   }
 
   def getAge(data: Map[String, String]): Either[Err, Int] = {
-    readAge(data).flatMap(age => (notMinor(age), realAge(age)).parMapN((_, _) => age))
+    readAge(data).flatMap(age => (notMinor(age), realAge(age)).parTupled >> age.pure)
   }
 
   def getName(data: Map[String, String]): Either[Err, String] = {
