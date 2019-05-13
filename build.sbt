@@ -4,6 +4,10 @@ version := "0.1"
 
 scalaVersion := "2.12.7"
 
+resolvers += Resolver.sonatypeRepo("releases")
+
+addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.0")
+
 scalacOptions += "-Ypartial-unification"
 libraryDependencies ++= Seq(
   "org.typelevel"              %% "cats-core"                 % "1.4.0",
